@@ -493,23 +493,43 @@ def run_doctor(args):
     else:
         check_warn("OpenRouter API", "(not configured)")
     
-    anthropic_key = os.getenv("ANTHROPIC_API_KEY")
+    # Resolve Anthropic credentials using the adapter (handles API keys, OAuth tokens,
+    # and Claude Code credential files with correct auth method for each)
+    try:
+        from agent.anthropic_adapter import resolve_anthropic_token, _is_oauth_token
+        anthropic_key = resolve_anthropic_token()
+    except Exception:
+        anthropic_key = os.getenv("ANTHROPIC_API_KEY")
     if anthropic_key:
         print("  Checking Anthropic API...", end="", flush=True)
         try:
             import httpx
-            response = httpx.get(
-                "https://api.anthropic.com/v1/models",
-                headers={
-                    "x-api-key": anthropic_key,
-                    "anthropic-version": "2023-06-01"
-                },
-                timeout=10
-            )
+            if _is_oauth_token(anthropic_key):
+                # OAuth/setup-token → Bearer auth + beta header
+                response = httpx.get(
+                    "https://api.anthropic.com/v1/models",
+                    headers={
+                        "Authorization": f"Bearer {anthropic_key}",
+                        "anthropic-version": "2023-06-01",
+                        "anthropic-beta": "oauth-2025-04-20",
+                    },
+                    timeout=10
+                )
+            else:
+                # Regular API key → x-api-key header
+                response = httpx.get(
+                    "https://api.anthropic.com/v1/models",
+                    headers={
+                        "x-api-key": anthropic_key,
+                        "anthropic-version": "2023-06-01"
+                    },
+                    timeout=10
+                )
             if response.status_code == 200:
-                print(f"\r  {color('✓', Colors.GREEN)} Anthropic API                           ")
+                auth_type = "OAuth" if _is_oauth_token(anthropic_key) else "API key"
+                print(f"\r  {color('✓', Colors.GREEN)} Anthropic API ({auth_type})                     ")
             elif response.status_code == 401:
-                print(f"\r  {color('✗', Colors.RED)} Anthropic API {color('(invalid API key)', Colors.DIM)}                 ")
+                print(f"\r  {color('✗', Colors.RED)} Anthropic API {color('(invalid credentials)', Colors.DIM)}                 ")
             else:
                 msg = "(couldn't verify)"
                 print(f"\r  {color('⚠', Colors.YELLOW)} Anthropic API {color(msg, Colors.DIM)}                 ")

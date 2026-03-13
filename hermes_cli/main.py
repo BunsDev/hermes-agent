@@ -1601,7 +1601,8 @@ def _run_anthropic_oauth_flow(save_env_value):
         print()
         token = run_oauth_setup_token()
         if token:
-            save_env_value("ANTHROPIC_API_KEY", token)
+            save_env_value("CLAUDE_CODE_OAUTH_TOKEN", token)
+            save_env_value("ANTHROPIC_API_KEY", "")  # clear so OAuth token takes priority
             print("  ✓ OAuth credentials saved.")
             return True
 
@@ -1615,7 +1616,8 @@ def _run_anthropic_oauth_flow(save_env_value):
             print()
             return False
         if manual_token:
-            save_env_value("ANTHROPIC_API_KEY", manual_token)
+            save_env_value("CLAUDE_CODE_OAUTH_TOKEN", manual_token)
+            save_env_value("ANTHROPIC_API_KEY", "")  # clear so OAuth token takes priority
             print("  ✓ Setup-token saved.")
             return True
 
@@ -1642,7 +1644,8 @@ def _run_anthropic_oauth_flow(save_env_value):
             print()
             return False
         if token:
-            save_env_value("ANTHROPIC_API_KEY", token)
+            save_env_value("CLAUDE_CODE_OAUTH_TOKEN", token)
+            save_env_value("ANTHROPIC_API_KEY", "")  # clear so OAuth token takes priority
             print("  ✓ Setup-token saved.")
             return True
         print("  Cancelled — install Claude Code and try again.")
@@ -1735,6 +1738,7 @@ def _model_flow_anthropic(config, current_model=""):
                 print("  Cancelled.")
                 return
             save_env_value("ANTHROPIC_API_KEY", api_key)
+            save_env_value("CLAUDE_CODE_OAUTH_TOKEN", "")  # clear so API key takes priority
             print("  ✓ API key saved.")
 
         else:

@@ -1127,14 +1127,16 @@ def setup_model_provider(config: dict):
                     print()
                     token = run_oauth_setup_token()
                     if token:
-                        save_env_value("ANTHROPIC_API_KEY", token)
+                        save_env_value("CLAUDE_CODE_OAUTH_TOKEN", token)
+                        save_env_value("ANTHROPIC_API_KEY", "")  # clear so OAuth token takes priority
                         print_success("OAuth credentials saved")
                     else:
                         # Subprocess completed but no token auto-detected
                         print()
                         token = prompt("Paste setup-token here (if displayed above)", password=True)
                         if token:
-                            save_env_value("ANTHROPIC_API_KEY", token)
+                            save_env_value("CLAUDE_CODE_OAUTH_TOKEN", token)
+                            save_env_value("ANTHROPIC_API_KEY", "")  # clear so OAuth token takes priority
                             print_success("Setup-token saved")
                         else:
                             print_warning("Skipped — agent won't work without credentials")
@@ -1148,7 +1150,8 @@ def setup_model_provider(config: dict):
                     print()
                     token = prompt("Setup-token (sk-ant-oat-...)", password=True)
                     if token:
-                        save_env_value("ANTHROPIC_API_KEY", token)
+                        save_env_value("CLAUDE_CODE_OAUTH_TOKEN", token)
+                        save_env_value("ANTHROPIC_API_KEY", "")  # clear so OAuth token takes priority
                         print_success("Setup-token saved")
                     else:
                         print_warning("Skipped — install Claude Code and re-run setup")
@@ -1159,6 +1162,7 @@ def setup_model_provider(config: dict):
                 api_key = prompt("API key (sk-ant-...)", password=True)
                 if api_key:
                     save_env_value("ANTHROPIC_API_KEY", api_key)
+                    save_env_value("CLAUDE_CODE_OAUTH_TOKEN", "")  # clear so API key takes priority
                     print_success("API key saved")
                 else:
                     print_warning("Skipped — agent won't work without credentials")
